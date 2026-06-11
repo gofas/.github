@@ -1,0 +1,23 @@
+name: Project Sync
+on:
+  issues:
+    types:
+      - opened
+      - reopened
+      - closed
+jobs:
+  sync:
+    # Repos da conta mauriciogofas: usar mauriciogofas/.github
+    # Repos de outra conta/org: fazer fork deste repo e apontar para o fork
+    # (secrets: inherit não propaga cross-account/cross-org)
+    uses: SEU_USUARIO/.github/.github/workflows/project-sync.yml@master
+    with:
+      issue_url: ${{ github.event.issue.html_url }}
+      issue_state: ${{ github.event.issue.state }}
+      issue_action: ${{ github.event.action }}
+      project_id: "PVT_kwXXXXXXXXXXXXXX"
+      status_field: "PVTSSF_XXXXXXXXXXXXXXXXXXXXXXXXXX"
+      status_realizar: "xxxxxxxx"
+      status_em_andamento: "yyyyyyyy"
+      status_realizado: "zzzzzzzz"
+    secrets: inherit
