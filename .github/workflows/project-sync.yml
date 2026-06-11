@@ -1,0 +1,110 @@
+name: Sync GitHub Project
+
+on:
+  workflow_call:
+    inputs:
+      issue_url:
+        required: false
+        type: string
+      issue_state:
+        required: false
+        type: string
+      issue_action:
+        required: false
+        type: string
+      project_id:
+        required: true
+        type: string
+      status_field:
+        required: true
+        type: string
+      status_realizar:
+        required: true
+        type: string
+      status_em_andamento:
+        required: true
+        type: string
+      status_realizado:
+        required: true
+        type: string
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Add issue to project and update status
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          ISSUE_URL: ${{ inputs.issue_url }}
+          ISSUE_STATE: ${{ inputs.issue_state }}
+          ISSUE_ACTION: ${{ inputs.issue_action }}
+          PROJECT_ID: ${{ inputs.project_id }}
+          STATUS_FIELD: ${{ inputs.status_field }}
+          STATUS_REALIZAR: ${{ inputs.status_realizar }}
+          STATUS_EM_ANDAMENTO: ${{ inputs.status_em_andamento }}
+          STATUS_REALIZADO: ${{ inputs.status_realizado }}
+        run: |
+          OWNER=$(echo "$ISSUE_URL" | cut -d'/' -f4)
+          REPO=$(echo "$ISSUE_URL" | cut -d'/' -f5)
+          NUMBER=$(echo "$ISSUE_URL" | cut -d'/' -f7)
+
+          NODE_ID=$(gh api graphql -f query='
+            query($owner:String!, $repo:String!, $number:Int!) {
+              repository(owner:$owner, name:$repo) {
+                issue(number:$number) { id }
+              }
+            }' \
+            -f owner="$OWNER" \
+            -f repo="$REPO" \
+            -F number="$NUMBER" \
+            --jq '.data.repository.issue.id')
+
+          echo "Node ID: $NODE_ID"
+
+          ITEM_ID=$(gh api graphql -f query='
+            mutation($project:ID!, $contentId:ID!) {
+              addProjectV2ItemById(
+                input: {projectId: $project, contentId: $contentId}
+              ) { item { id } }
+            }' \
+            -f project="$PROJECT_ID" \
+            -f contentId="$NODE_ID" \
+            --jq '.data.addProjectV2ItemById.item.id')
+
+          echo "Item ID: $ITEM_ID"
+
+          if [ "$ISSUE_ACTION" = "closed" ]; then
+            OPTION="$STATUS_REALIZADO"
+          elif [ "$ISSUE_ACTION" = "reopened" ]; then
+            OPTION="$STATUS_EM_ANDAMENTO"
+          else
+            OPTION="$STATUS_REALIZAR"
+          fi
+
+          echo "Action: $ISSUE_ACTION -> Option: $OPTION"
+
+          gh api graphql -f query='
+            mutation($project:ID!, $item:ID!, $field:ID!, $option:String!) {
+              updateProjectV2ItemFieldValue(input: {
+                projectId: $project,
+                itemId: $item,
+                fieldId: $field,
+                value: { singleSelectOptionId: $option }
+              }) { projectV2Item { id } }
+            }' \
+            -f project="$PROJECT_ID" \
+            -f item="$ITEM_ID" \
+            -f field="$STATUS_FIELD" \
+            -f option="$OPTION"
+
+          gh api graphql -f query='
+            mutation($project:ID!, $item:ID!) {
+              updateProjectV2ItemPosition(input: {
+                projectId: $project,
+                itemId: $item,
+                afterId: null
+              }) { clientMutationId }
+            }' \
+            -f project="$PROJECT_ID" \
+            -f item="$ITEM_ID"
