@@ -176,7 +176,7 @@ jobs:
 
           unreleased_lines = build_section(unreleased)
           if unreleased_lines:
-              out.append(f"## [Próxima atualização](https://github.com/{repo}/tree/HEAD)\n")
+              out.append("## Próxima atualização\n")
               out.extend(unreleased_lines)
               if last_tag:
                   out.append(f"\n[Comparar versões](https://github.com/{repo}/compare/{last_tag}...HEAD)\n")
@@ -193,7 +193,7 @@ jobs:
               compare = (f"https://github.com/{repo}/compare/{prev_tag}...{rel['tag']}"
                          if prev_tag else f"https://github.com/{repo}/releases/tag/{rel['tag']}")
 
-              out.append(f"## [{rel['name']} - {rd}]({rel['url']})\n")
+              out.append(f"## {rel['name']} - {rd}\n")
               section_lines = build_section(issues)
               out.extend(section_lines)
               out.append(f"\n[Comparar versões]({compare})\n")
