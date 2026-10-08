@@ -13,7 +13,7 @@ Dois workflows reutilizáveis prontos para usar em qualquer repositório GitHub:
 
 Estes workflows dependem de secrets do seu repositório para autenticar chamadas à API do GitHub. O GitHub só propaga secrets para workflows hospedados na mesma conta — por isso o fork é obrigatório.
 
-1. Acesse [github.com/mauriciogofas/.github](https://github.com/mauriciogofas/.github)
+1. Acesse github.com/mauriciogofas/.github
 2. Clique em **Fork**
 3. Selecione sua conta como destino
 4. Nos callers, aponte `uses:` para `SEU_USUARIO/.github/.github/workflows/...@master`
