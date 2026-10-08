@@ -100,8 +100,7 @@ jobs:
               return issues
 
           def label_tag(name):
-              filter_url = f"https://github.com/{repo}/issues?q=is%3Aissue+state%3Aclosed+label%3A{quote(name)}"
-              return f'<a href="{filter_url}" style="color:#a99c9c;text-decoration:none"><code>{name}</code></a>'  
+              return f'<code>{name}</code>'  
 
           # Labels padrão que classificam o issue como Melhorias ou Correções
           MELHORIA_LABELS = {"melhoria", "melhorias", "enhancement"}
@@ -113,7 +112,7 @@ jobs:
               num  = issue["number"]
               tags = " ".join(label_tag(l["name"]) for l in issue["labels"])
               suffix = f" {tags}" if tags else ""
-              return f"- {issue['title']} - [#{num}]({issue['url']}){suffix}"
+              return f"- {issue['title']} - #{num}{suffix}"
 
           def build_section(issues):
               if not issues:
@@ -178,8 +177,6 @@ jobs:
           if unreleased_lines:
               out.append("## Próxima atualização\n")
               out.extend(unreleased_lines)
-              if last_tag:
-                  out.append(f"\n[Comparar versões](https://github.com/{repo}/compare/{last_tag}...HEAD)\n")
 
           # Blocos de releases — do mais recente para o mais antigo
           for i in range(len(all_releases) - 1, -1, -1):
@@ -190,13 +187,10 @@ jobs:
 
               issues = fetch_issues(since=prev_date, until=rel["date"])
               rd      = fmt_date(rel["date"])
-              compare = (f"https://github.com/{repo}/compare/{prev_tag}...{rel['tag']}"
-                         if prev_tag else f"https://github.com/{repo}/releases/tag/{rel['tag']}")
 
               out.append(f"## {rel['name']} - {rd}\n")
               section_lines = build_section(issues)
               out.extend(section_lines)
-              out.append(f"\n[Comparar versões]({compare})\n")
 
           final = "\n".join(out) + "\n"
 
